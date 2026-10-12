@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="DriveClient.Tests/DriveClient.Tests.csproj" />
+  <Project Path="DriveClient.WPF/DriveClient.WPF.csproj" />
+</Solution>
