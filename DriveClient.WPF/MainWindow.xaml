@@ -1,56 +1,75 @@
-﻿<Window x:Class="DriveClient.WPF.MainWindow"
+﻿<Window x:Class="DriveClientWPF.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Student Drive (WPF)" Height="600" Width="900"
-        AllowDrop="True" Drop="Window_Drop">
-	<!-- Увімкнення Drag-n-Drop -->
-
+        Title="Віртуальний диск" Height="500" Width="850"
+        WindowStartupLocation="CenterScreen">
 	<Grid Margin="10">
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="2*"/>
-			<ColumnDefinition Width="1*"/>
-		</Grid.ColumnDefinitions>
-
 		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>
 
-		<!-- Панель керування -->
-		<StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,10">
-			<Button Content="Завантажити (Upload)" Width="130" Margin="0,0,10,0" Click="UploadButton_Click"/>
-			<Button Content="Синхронізувати" Width="100" Margin="0,0,10,0"/>
+		<StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+			<TextBlock x:Name="txtUserInfo" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+			<Button Content="Вийти" Click="Logout_Click" Margin="0,0,15,0" Padding="8,3" Background="#FFF8D7D7"/>
 
-			<ComboBox x:Name="FilterCombo" Width="100" Margin="20,0,10,0" SelectedIndex="0" SelectionChanged="FilterOrSortChanged">
-				<ComboBoxItem Content="Всі файли" Tag=""/>
-				<ComboBoxItem Content="Тільки .cpp" Tag=".cpp"/>
-				<ComboBoxItem Content="Тільки .png" Tag=".png"/>
-			</ComboBox>
-
-			<ComboBox x:Name="SortCombo" Width="180" Margin="0,0,10,0" SelectedIndex="0" SelectionChanged="FilterOrSortChanged">
-				<ComboBoxItem Content="За датою зміни (зростання)"/>
-				<ComboBoxItem Content="За датою зміни (спадання)"/>
-			</ComboBox>
+			<Button Content="Завантажити" Click="Upload_Click" Margin="5,0" Padding="8,3"/>
+			<Button Content="Вивантажити" Click="Download_Click" Margin="5,0" Padding="8,3"/>
+			<Button Content="Видалити" Click="Delete_Click" Margin="5,0" Padding="8,3"/>
+			<Button Content="Синхронізувати папку" Click="Sync_Click" Margin="5,0" Padding="8,3"/>
 		</StackPanel>
 
-		<!-- Таблиця файлів -->
-		<DataGrid x:Name="FilesGrid" Grid.Row="1" Grid.Column="0" AutoGenerateColumns="False" 
-                  IsReadOnly="True" Margin="0,0,10,0" SelectionChanged="FilesGrid_SelectionChanged">
+		<GroupBox Grid.Row="1" Header="Параметри відображення" Margin="0,0,0,10" Padding="10">
+			<StackPanel>
+				<WrapPanel Margin="0,0,0,10" VerticalAlignment="Center">
+					<TextBlock Text="Фільтр:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,5,0"/>
+					<ComboBox x:Name="cmbFilter" Width="130" SelectionChanged="FilterOrSort_Changed" Margin="0,0,20,0">
+						<ComboBoxItem x:Name="cbiAllFiles" Content="Всі файли" IsSelected="True"/>
+						<ComboBoxItem Content=".cpp"/>
+						<ComboBoxItem Content=".png"/>
+					</ComboBox>
+
+					<TextBlock Text="Сортування:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,5,0"/>
+					<ComboBox x:Name="cmbSort" Width="200" SelectionChanged="FilterOrSort_Changed" Margin="0,0,20,0">
+						<ComboBoxItem x:Name="cbiSortDesc" Content="Спочатку нові (спадання)" IsSelected="True"/>
+						<ComboBoxItem Content="Спочатку старі (зростання)"/>
+					</ComboBox>
+
+					<Button Content="Скинути фільтри" Click="ResetFilters_Click" Padding="10,3" Cursor="Hand" Background="#F0F0F0"/>
+				</WrapPanel>
+
+				<Separator Margin="0,0,0,10"/>
+
+				<WrapPanel VerticalAlignment="Center">
+					<TextBlock Text="Відображати стовпці:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+					<CheckBox x:Name="chkSize" Content="Розмір" IsChecked="True" Click="ToggleColumn_Click" Margin="0,0,15,0" VerticalAlignment="Center"/>
+					<CheckBox x:Name="chkCreated" Content="Дата створення" IsChecked="True" Click="ToggleColumn_Click" Margin="0,0,15,0" VerticalAlignment="Center"/>
+					<CheckBox x:Name="chkUpdated" Content="Дата зміни" IsChecked="True" Click="ToggleColumn_Click" Margin="0,0,15,0" VerticalAlignment="Center"/>
+					<CheckBox x:Name="chkUploader" Content="Хто завантажив" IsChecked="True" Click="ToggleColumn_Click" Margin="0,0,15,0" VerticalAlignment="Center"/>
+					<CheckBox x:Name="chkEditor" Content="Хто редагував" IsChecked="True" Click="ToggleColumn_Click" Margin="0,0,15,0" VerticalAlignment="Center"/>
+				</WrapPanel>
+			</StackPanel>
+		</GroupBox>
+
+		<DataGrid x:Name="FilesDataGrid" 
+          Grid.Row="2" 
+          AutoGenerateColumns="False" 
+          IsReadOnly="True" 
+          GridLinesVisibility="Horizontal"
+          AllowDrop="True"
+          Drop="FilesDataGrid_Drop"
+          DragOver="FilesDataGrid_DragOver"
+          MouseDoubleClick="FilesDataGrid_MouseDoubleClick">
 			<DataGrid.Columns>
-				<DataGridTextColumn Header="Назва" Binding="{Binding Name}" Width="*"/>
-				<DataGridTextColumn Header="Розширення" Binding="{Binding Extension}"/>
-				<DataGridTextColumn Header="Дата зміни" Binding="{Binding ModificationDate, StringFormat=dd.MM.yyyy HH:mm}"/>
-				<DataGridTextColumn Header="Автор" Binding="{Binding UploadedBy}"/>
+				<DataGridTextColumn Header="Назва файлу" Binding="{Binding Name}" Width="*"/>
+				<DataGridTextColumn Header="Розмір" Binding="{Binding Size}"/>
+				<DataGridTextColumn Header="Дата створення" Binding="{Binding CreatedAtLocal, StringFormat=\{0:dd.MM.yyyy HH:mm\}}"/>
+				<DataGridTextColumn Header="Дата зміни" Binding="{Binding UpdatedAtLocal, StringFormat=\{0:dd.MM.yyyy HH:mm\}}"/>
+				<DataGridTextColumn Header="Хто завантажив" Binding="{Binding UploadedBy}"/>
+				<DataGridTextColumn Header="Хто редагував" Binding="{Binding EditedBy}"/>
 			</DataGrid.Columns>
 		</DataGrid>
-
-		<!-- Зона перегляду файлу кліком (.cpp або .png) -->
-		<GroupBox Grid.Row="1" Grid.Column="1" Header="Попередній перегляд">
-			<Grid>
-				<Image x:Name="PreviewImage" Visibility="Collapsed" Margin="5"/>
-				<TextBox x:Name="PreviewText" IsReadOnly="True" TextWrapping="Wrap" 
-                         VerticalScrollBarVisibility="Auto" Visibility="Collapsed" Margin="5"/>
-			</Grid>
-		</GroupBox>
 	</Grid>
 </Window>

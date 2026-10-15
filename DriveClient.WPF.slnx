@@ -1,4 +1,9 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="appsettings.json.example" />
+    <File Path="DriveClient.WPF/appsettings.json" />
+  </Folder>
   <Project Path="DriveClient.Tests/DriveClient.Tests.csproj" />
   <Project Path="DriveClient.WPF/DriveClient.WPF.csproj" />
 </Solution>
